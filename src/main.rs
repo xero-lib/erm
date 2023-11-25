@@ -1,4 +1,4 @@
-use std::{path::PathBuf, io::Write};
+use std::path::PathBuf;
 
 use clap::Parser;
 
@@ -55,7 +55,11 @@ fn delete_recursive(path: PathBuf) {
     }
 }
 
+#[cfg(test)]
+use serial_test::serial;
+
 #[test]
+#[serial]
 fn rmdirs() -> Result<(), std::io::Error> {
     std::fs::create_dir_all("test/contains_dirs/hello")?;
     std::fs::create_dir_all("test/contains_dirs/world/inside")?;
@@ -70,7 +74,11 @@ fn rmdirs() -> Result<(), std::io::Error> {
     Ok(())
 }
 
+#[cfg(test)]
+use std::io::Write;
+
 #[test]
+#[serial]
 fn rmfiles() -> Result<(), std::io::Error> {
     std::fs::create_dir_all("test/contains_files_and_dirs/hello")?;
     std::fs::create_dir_all("test/contains_files_and_dirs/world")?;
