@@ -77,7 +77,6 @@ fn rmdirs() -> Result<(), std::io::Error> {
 
 #[test]
 #[serial]
-
 fn rmfiles() -> Result<(), std::io::Error> {
     use std::io::Write;
     std::fs::create_dir_all("test/contains_files_and_dirs/hello")?;
