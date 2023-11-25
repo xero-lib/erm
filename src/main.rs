@@ -5,7 +5,7 @@ use clap::Parser;
 #[derive(Parser)]
 struct Args {
     // Directory to recursively remove empty directories from
-    path: Option<String>
+    path: Option<String>,
 }
 
 fn main() {
@@ -51,7 +51,7 @@ fn delete_recursive(path: PathBuf) {
 
     match std::fs::remove_dir(&path) {
         Ok(_) => println!("Removed {}", path.to_str().unwrap()),
-        Err(e) => eprintln!("Failed to remove {}: {e:#?}", path.to_str().unwrap())
+        Err(e) => eprintln!("Failed to remove {}: {}", path.to_str().unwrap(), e.kind())
     }
 }
 
