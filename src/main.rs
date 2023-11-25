@@ -74,12 +74,12 @@ fn rmdirs() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-#[cfg(test)]
-use std::io::Write;
 
 #[test]
 #[serial]
+
 fn rmfiles() -> Result<(), std::io::Error> {
+    use std::io::Write;
     std::fs::create_dir_all("test/contains_files_and_dirs/hello")?;
     std::fs::create_dir_all("test/contains_files_and_dirs/world")?;
     let mut file = std::fs::File::create("test/contains_files_and_dirs/hello/hello.txt")?;
