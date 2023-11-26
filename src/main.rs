@@ -15,10 +15,15 @@ fn main() {
     };
     
     if let Err(e) = std::fs::read_dir(&path) {
-        panic!("Unable to read target dir: {e:#?}");
+        panic!("Unable to read target dir: {}", e.to_string());
     }
 
     delete_recursive(path.to_owned());
+
+    match std::fs::remove_dir(&path) {
+        Ok(_) => println!("Removed {}", path.to_str().unwrap()),
+        Err(e) => eprintln!("Failed to remove {}: {}", path.to_str().unwrap(), e.kind())
+    }
 }
 
 fn delete_recursive(path: PathBuf) {
@@ -49,10 +54,6 @@ fn delete_recursive(path: PathBuf) {
         }
     }
 
-    match std::fs::remove_dir(&path) {
-        Ok(_) => println!("Removed {}", path.to_str().unwrap()),
-        Err(e) => eprintln!("Failed to remove {}: {}", path.to_str().unwrap(), e.kind())
-    }
 }
 
 #[cfg(test)]
