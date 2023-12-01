@@ -1,4 +1,4 @@
-# rrm
+# erm
 Recursively remove empty files and directories.  
 
 Default behavior is to remove both empty directories and empty files.  
