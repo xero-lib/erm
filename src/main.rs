@@ -25,9 +25,19 @@ fn main() {
         panic!("Unable to read target dir: {}", e.to_string());
     }
 
-    if args.dirs == args.files { delete_recursive(path); } else
-    if args.dirs { delete_dirs_recursive(path); } else
-    if args.files { delete_files_recursive(path); }
+    if args.dirs == args.files { delete_recursive(&path); } else
+    if args.dirs { delete_dirs_recursive(&path); } else
+    if args.files { delete_files_recursive(&path); }
+
+
+    if let Ok(dir) = std::fs::read_dir(&path) {
+        if dir.count() == 0 {
+            match std::fs::remove_dir(&path) {
+                Ok(_) => println!("Removed {}", path.to_str().unwrap()),
+                Err(e) => eprintln!("Failed to remove {}: {}", path.to_str().unwrap(), e.to_string())
+            }
+        }
+    }
 }
 
 fn get_dir(path: &PathBuf) -> Result<ReadDir, ()> {
@@ -49,22 +59,22 @@ macro_rules! unwrap_or_return {
     }
 }
 
-// macro_rules! unwrap_or_continue {
-//     ( $e:expr, $t: ) => {
-//         match $e {
-//             Ok(x) => x,
-//             Err(_) => continue,
-//         }
-//     };
-// }
+macro_rules! unwrap_or_continue {
+    ( $e:expr ) => {
+        match $e {
+            Ok(x) => x,
+            Err(_) => continue,
+        }
+    };
+}
 
-fn delete_dirs_recursive(path: PathBuf) {
+fn delete_dirs_recursive(path: &PathBuf) {
     let dir = unwrap_or_return!(get_dir(&path));
     
     for i in dir {
         match &i {
             Ok(e) => match e.file_type() {
-                Ok(t) if t.is_dir() => delete_dirs_recursive(e.path()),
+                Ok(t) if t.is_dir() => delete_dirs_recursive(&e.path()),
                 _ => continue,
             },
             Err(e) => {
@@ -79,14 +89,9 @@ fn delete_dirs_recursive(path: PathBuf) {
             Err(e) => eprintln!("Failed to remove {}: {e}", unwrapped.file_name().to_string_lossy())
         }
     }
-
-    match std::fs::remove_dir(&path) {
-        Ok(_) => println!("Removed {}", path.to_str().unwrap()),
-        Err(e) => eprintln!("Failed to remove {}: {}", path.to_str().unwrap(), e.kind())
-    }
 }
 
-fn delete_files_recursive(path: PathBuf) {
+fn delete_files_recursive(path: &PathBuf) {
     let dir = unwrap_or_return!(get_dir(&path));
 
     for i in dir {
@@ -97,7 +102,7 @@ fn delete_files_recursive(path: PathBuf) {
                     Err(e) => { eprintln!("Error fetching metadata for {}", e.to_string()); continue }
                 };
 
-                if meta.file_type().is_dir() { delete_files_recursive(entry.path()) } else
+                if meta.file_type().is_dir() { delete_files_recursive(&entry.path()) } else
                 if meta.file_type().is_file() && meta.len() == 0 {
                     if let Err(e) = std::fs::remove_file(&entry.path()) {
                         eprintln!("Unable to remove empty file {}: {}", entry.path().to_string_lossy(), e.to_string());
@@ -113,7 +118,7 @@ fn delete_files_recursive(path: PathBuf) {
     }
 }
 
-fn delete_recursive(path: PathBuf) {
+fn delete_recursive(path: &PathBuf) {
     let dir = unwrap_or_return!(get_dir(&path));
 
     for i in dir {
@@ -124,7 +129,7 @@ fn delete_recursive(path: PathBuf) {
                     Err(e) => { eprintln!("Error fetching metadata for {}", e.to_string()); continue }
                 };
 
-                if meta.file_type().is_dir() { delete_recursive(entry.path()) } else
+                if meta.file_type().is_dir() { delete_recursive(&entry.path()) } else
                 if meta.file_type().is_file() && meta.len() == 0 {
                     if let Err(e) = std::fs::remove_file(&entry.path()) {
                         eprintln!("Unable to remove empty file {}: {}", entry.path().to_string_lossy(), e.to_string());
@@ -139,15 +144,14 @@ fn delete_recursive(path: PathBuf) {
         }
 
         let unwrapped = i.unwrap();
-        match std::fs::remove_dir(unwrapped.path()) {
-            Ok(_) => println!("Removed {}", unwrapped.path().to_string_lossy()),
-            Err(e) => eprintln!("Failed to remove {}: {e}", unwrapped.file_name().to_string_lossy())
-        }
-    }
-
-    match std::fs::remove_dir(&path) {
-        Ok(_) => println!("Removed {}", path.to_str().unwrap()),
-        Err(e) => eprintln!("Failed to remove {}: {}", path.to_str().unwrap(), e.kind())
+        if let Ok(t) = unwrapped.file_type() {
+            if t.is_dir() && unwrap_or_continue!(get_dir(&unwrapped.path())).count() == 0 {
+                match std::fs::remove_dir(unwrapped.path()) {
+                    Ok(_) => println!("Removed {}", unwrapped.path().to_string_lossy()),
+                    Err(e) => eprintln!("Failed to remove {}: {}", unwrapped.file_name().to_string_lossy(), e.to_string())
+                }
+            }
+        };
     }
 }
 
@@ -160,7 +164,7 @@ fn rmdirs() -> Result<(), std::io::Error> {
     std::fs::create_dir_all("test/contains_dirs/hello")?;
     std::fs::create_dir_all("test/contains_dirs/world/inside")?;
     
-    delete_dirs_recursive(PathBuf::from("test"));
+    delete_dirs_recursive(&PathBuf::from("test"));
 
     match std::fs::read_dir("test") {
         Ok(_) => assert!(false, "Directories were not properly deleted."),
@@ -180,7 +184,7 @@ fn rmfiles() -> Result<(), std::io::Error> {
     let mut file = std::fs::File::create("test/contains_files_and_dirs/hello/hello.txt")?;
     file.write_all("hello".as_bytes())?;
 
-    delete_dirs_recursive(PathBuf::from("test"));
+    delete_dirs_recursive(&PathBuf::from("test"));
     let result = std::fs::read_dir("test");
 
     std::fs::remove_dir_all("test")?;
