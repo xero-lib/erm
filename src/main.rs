@@ -78,7 +78,7 @@ fn delete_dirs_recursive(path: &PathBuf) {
                 _ => continue,
             },
             Err(e) => {
-                eprintln!("Unable to enter directory {}: {e:#?}", i.as_ref().unwrap().path().to_string_lossy());
+                eprintln!("Unable to enter directory {}: {}", i.as_ref().unwrap().path().to_string_lossy(), e.kind());
                 continue;
             }
         }
@@ -111,7 +111,7 @@ fn delete_files_recursive(path: &PathBuf) {
                 }
             },
             Err(e) => {
-                eprintln!("Unable to enter directory {}: {e:#?}", i.as_ref().unwrap().path().to_string_lossy());
+                eprintln!("Unable to enter directory {}: {}", i.as_ref().unwrap().path().to_string_lossy(), e.kind());
                 continue;
             }
         }
@@ -138,7 +138,7 @@ fn delete_recursive(path: &PathBuf) {
                 }
             },
             Err(e) => {
-                eprintln!("Unable to enter directory {}: {e:#?}", i.as_ref().unwrap().path().to_string_lossy());
+                eprintln!("Unable to enter directory {}: {}", i.as_ref().unwrap().path().to_string_lossy(), e.kind());
                 continue;
             }
         }
